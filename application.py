@@ -13,6 +13,7 @@ class Application(tornado.web.Application):
             (r'/async1', yibu.Async1Handler),
             (r'/async2', yibu.Async2Handler),
             (r'/async3', yibu.Async3Handler),
+            (r'/async4', yibu.Async4Handler),
             (r'/async_home', yibu.HomeHandler),
 
             (r'/lajos', index.LajosHandler, {'word1': 'good', 'word2': 'nice'}),

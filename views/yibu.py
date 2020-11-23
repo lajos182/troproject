@@ -1,3 +1,4 @@
+import asyncio
 import time
 import json
 
@@ -71,3 +72,33 @@ class Async3Handler(RequestHandler):
     async def get(self, *args, **kwargs):
         res = await self.get_data()
         self.write(res)
+
+# 直接使用async和await模块
+class Async4Handler(RequestHandler):
+
+    async def get_data(self, url):
+        client = AsyncHTTPClient()
+        res = await client.fetch(url)
+        if res.error:
+            ret = {
+                'ret': 0
+            }
+        else:
+            ret = res.body.decode()
+        return ret
+    # 将所有的异步操作放入组中，实现loop管理
+    async def get(self, *args, **kwargs):
+        url1 = 'http://192.168.198.195:8080/test/area/140100000000/'
+        url2 = 'http://192.168.198.195:8080/test/area/'
+        task_list = [self.get_data(url1), self.get_data(url2)]
+        res = await asyncio.wait(task_list)
+        result_list = []
+        i = 1
+        for item in res[0]:
+            if item.result():
+                result_list.append({
+                    'index': i,
+                    'results': json.loads(item.result())
+                })
+                i += 1
+        self.write('hello')
