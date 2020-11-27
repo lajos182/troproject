@@ -4,7 +4,7 @@ import json
 
 from tornado.web import RequestHandler
 from tornado.gen import coroutine, Return
-from tornado.httpclient import AsyncHTTPClient
+from tornado.httpclient import AsyncHTTPClient, HTTPRequest
 
 class Async1Handler(RequestHandler):
 
@@ -102,3 +102,43 @@ class Async4Handler(RequestHandler):
                 })
                 i += 1
         self.write('hello')
+
+class AsyncExportHandler(RequestHandler):
+
+    async def get_data(self, *args, **kwargs):
+        headers = {
+            'Authorization': 'JWT eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoyNDEsInVzZXJuYW1lIjoiMTgwMDk1NDY2NjEiLCJleHAiOjE2Mzc5NzY5OTAsImVtYWlsIjoiIiwib3JpZ19pYXQiOjE2MDY0NDA5OTB9.xra-R9-xQiYO0tyAEWApC_llt8OumB-MUOp4DPo1fWo'
+        }
+        url = f'http://www.baidu.com/information/agent/scan_export/?' \
+              f'page={kwargs["page"]}&' \
+              f'size={kwargs["size"]}&' \
+              f'min_update_date={kwargs["min_update_date"]}&' \
+              f'max_update_date={kwargs["max_update_date"]}&' \
+              f'serial_number={kwargs["serial_number"]}'
+        request = HTTPRequest(
+            url=url,
+            method='GET',
+            headers=headers
+        )
+        client = AsyncHTTPClient()
+        res = await client.fetch(request, raise_error=False)
+        if res.error:
+            ret = res.error.response.body.decode()
+        else:
+            ret = res.body.decode()
+        return ret
+
+    async def get(self, *args, **kwargs):
+        page = self.get_query_argument('page', '1')
+        size = self.get_query_argument('size', '100')
+        min_update_date = self.get_query_argument('min_update_date', '')
+        max_update_date = self.get_query_argument('max_update_date', '')
+        serial_number = self.get_query_argument('serail_number', '')
+        res = await self.get_data(
+            page=page,
+            size=size,
+            min_update_date=min_update_date,
+            max_update_date=max_update_date,
+            serial_number=serial_number
+        )
+        self.write(res)
